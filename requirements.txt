@@ -6,3 +6,5 @@ scipy
 soundfile
 scikit-learn
 openai-whisper
+sentence-transformers
+torch
