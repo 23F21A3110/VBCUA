@@ -8,3 +8,4 @@ scikit-learn
 openai-whisper
 sentence-transformers
 torch
+ffmpeg-python
