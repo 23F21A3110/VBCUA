@@ -1,32 +1,8 @@
 import whisper
-import google.generativeai as genai
-import streamlit as st
-import json
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-model = genai.GenerativeModel("gemini-2.5-flash")
-def generate_feedback(transcribed_text):
-    prompt = f"""
-    Student Explanation:
-
-    {transcribed_text}
-
-    Give feedback in this format:
-
-    Strengths:
-    Weaknesses:
-    Suggestions:
-    Overall Rating (out of 10):
-    """
-
-    response = model.generate_content(prompt)
-    return response.text
-
 whisper_model = whisper.load_model("base")
-
 
 embed_model = SentenceTransformer(
     "all-MiniLM-L6-v2"

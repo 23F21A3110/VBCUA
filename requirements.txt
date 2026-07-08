@@ -10,3 +10,4 @@ sentence-transformers
 torch
 ffmpeg-python
 fpdf2
+google-generativeai
