@@ -2,7 +2,7 @@ import whisper
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-whisper_model = whisper.load_model("base")
+whisper_model = whisper.load_model("tiny")
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 REFERENCE = """
