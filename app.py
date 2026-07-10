@@ -1,114 +1,55 @@
-import os
-import tempfile
-
+import whisper
+import google.generativeai as genai
 import streamlit as st
-import librosa
-import librosa.display
-import matplotlib.pyplot as plt
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-from utils.fluency import fluency_score
-from utils.concept import concept_score
+model = genai.GenerativeModel("gemini-2.5-flash")
 
+def generate_feedback(transcribed_text):
+    prompt = f"""
+    Student Explanation:
 
-# -------------------------------
-# App Title
-# -------------------------------
-st.title("🎤 Voice-Based Concept Understanding Analyser")
+    {transcribed_text}
 
+    Give feedback in this format:
 
-# -------------------------------
-# Audio Upload
-# -------------------------------
-uploaded_file = st.file_uploader(
-    "Upload your audio",
-    type=["wav", "mp3"]
-)
+    Strengths:
+    Weaknesses:
+    Suggestions:
+    Overall Rating (out of 10):
+    """
 
+    response = model.generate_content(prompt)
+    return response.text
+def generate_summary(transcribed_text):
+    prompt = f"""
+    Summarize the following student's explanation in 3-4 sentences.
 
-# -------------------------------
-# Process Audio
-# -------------------------------
-if uploaded_file:
+    Explanation:
+    {transcribed_text}
+    """
 
-    # Save uploaded audio temporarily
-    ext = os.path.splitext(uploaded_file.name)[1]
+    response = model.generate_content(prompt)
+    return response.text
+whisper_model = whisper.load_model("base")
+embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-    temp = tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=ext
-    )
+REFERENCE = """
+Machine learning is a branch of artificial intelligence
+that allows computers to learn from data.
+"""
 
-    temp.write(uploaded_file.read())
-    temp.close()
+def concept_score(audio_path):
 
-    audio_path = temp.name
+    result = whisper_model.transcribe(audio_path)
 
-    st.success("✅ Audio uploaded successfully!")
+    text = result["text"]
 
-    # -------------------------------
-    # Audio Player
-    # -------------------------------
-    st.subheader("🎵 Uploaded Audio")
-    st.audio(uploaded_file)
+    v1 = embed_model.encode([text])
+    v2 = embed_model.encode([REFERENCE])
 
-    # -------------------------------
-    # Waveform
-    # -------------------------------
-    st.subheader("📈 Audio Waveform")
+    similarity = cosine_similarity(v1, v2)[0][0]
 
-    y, sr = librosa.load(audio_path)
-
-    fig, ax = plt.subplots(figsize=(10, 3))
-    librosa.display.waveshow(y, sr=sr, ax=ax)
-
-    ax.set_title("Audio Waveform")
-    ax.set_xlabel("Time (seconds)")
-    ax.set_ylabel("Amplitude")
-
-    st.pyplot(fig)
-
-    # -------------------------------
-    # Speech Analysis
-    # -------------------------------
-    metrics = fluency_score(audio_path)
-
-    st.subheader("🗣️ Speech Analysis")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric(
-            "Duration",
-            f"{metrics['duration']} sec"
-        )
-
-    with col2:
-        st.metric(
-            "Energy",
-            metrics["energy"]
-        )
-
-    with col3:
-        st.metric(
-            "Pause Ratio",
-            metrics["pause_ratio"]
-        )
-
-    # -------------------------------
-    # Concept Understanding
-    # -------------------------------
-    text, score = concept_score(audio_path)
-
-    st.subheader("🧠 Concept Understanding")
-
-    st.write("### Transcribed Text")
-
-    st.success(text)
-
-    st.metric(
-        "Concept Score",
-        f"{score:.2f}%"
-    )
-
-    # Progress Bar
-    st.progress(int(score))
+    return text, round(float(similarity * 100), 2)
