@@ -3,6 +3,7 @@ google-generativeai
 sentence-transformers
 transformers
 torch
+torchvision
 numpy
 scipy
 scikit-learn
@@ -10,3 +11,4 @@ librosa
 soundfile
 ffmpeg-python
 openai-whisper==20250625
+fpdf2
