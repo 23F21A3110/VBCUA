@@ -8,6 +8,7 @@ scikit-learn
 openai-whisper
 sentence-transformers
 torch
+torchvision
 ffmpeg-python
 fpdf2
 google-generativeai
